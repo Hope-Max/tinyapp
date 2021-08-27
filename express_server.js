@@ -16,6 +16,11 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);// JSON.stringify() && res.send() 
 });
 
+// Add an additional endpoints with the response that contain HTML code
+app.get('/hello', (req, res) => {
+  res.send('<html><body>Hello <b>World</b></body></html>\n');
+});
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}!`);
 });
