@@ -8,7 +8,12 @@ const urlDatabase = {
 };
 
 app.get('/', (req, res) => {
-  res.send('Hello!');
+  res.send('Hello!');// res.write() && res.send()
+});
+
+// Add an additional endpoints
+app.get('/urls.json', (req, res) => {
+  res.json(urlDatabase);// JSON.stringify() && res.send() 
 });
 
 app.listen(port, () => {
