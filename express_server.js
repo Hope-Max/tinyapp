@@ -19,13 +19,13 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);// JSON.stringify() && res.send()
 });
 
-// Add an additional enpoints
+// Add an additional endpoints
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars); // use res.render() to pass/send the data to template
 });
 
-// Add an additional enpoints
+// Add an additional endpoints
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render('urls_show', templateVars);
