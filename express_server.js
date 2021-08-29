@@ -72,7 +72,15 @@ app.get('/urls/:shortURL', (req, res) => {
   res.render('urls_show', templateVars);
 });
 
-
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  if (!urlDatabase[shortURL]) {
+    res.statusCode = 404;
+    return res.end('404 Page Not Found\n');
+  }
+  const longURL = urlDatabase[shortURL];
+  res.redirect(longURL);
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}!`);
