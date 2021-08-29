@@ -47,12 +47,13 @@ app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
 
-// Add an additional endpoints
+// Read GET /urls
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars); // use res.render() to pass/send the data to template
 });
 
+// Edit POST /urls
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString(6);
   urlDatabase[shortURL] = `http://${req.body.longURL}`;
@@ -66,12 +67,13 @@ app.get('/urls/new', (req, res) => {
   res.render('urls_new');
 });
 
-// Add an additional endpoints
+// Read GET /urls/:shortURL
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render('urls_show', templateVars);
 });
 
+// Read GET /u/:shortURL
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   if (!urlDatabase[shortURL]) {
@@ -82,6 +84,7 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+// Delete POST /urls/:shortURL/delete
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
