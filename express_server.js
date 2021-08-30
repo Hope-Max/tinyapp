@@ -53,7 +53,7 @@ app.get('/urls', (req, res) => {
   res.render('urls_index', templateVars); // use res.render() to pass/send the data to template
 });
 
-// Edit POST /urls
+// Add POST /urls
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString(6);
   urlDatabase[shortURL] = `http://${req.body.longURL}`;
@@ -89,6 +89,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect('/urls');
+});
+
+// Edit POST /urls/:shortURL
+app.post("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  urlDatabase[shortURL] = `http://${req.body.longURL}`;
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.listen(port, () => {
