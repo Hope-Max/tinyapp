@@ -31,10 +31,7 @@ const generateRandomString = function(n) {
 // Set ejs as the view engine
 app.set('view engine', 'ejs');
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+const urlDatabase = {};
 
 // app.get('/', (req, res) => {
 //   res.send('Hello!');// res.write() && res.send()
@@ -62,7 +59,7 @@ app.post('/urls', (req, res) => {
   urlDatabase[shortURL] = `http://${req.body.longURL}`;
   // console.log(req.body);  // Log the POST request body to the console
   // res.send('Ok');         // Respond with 'Ok' (we will replace this)
-  res.redirect(`/urls/${shortURL}`);
+  res.redirect('/urls');
 });
 
 // Add additional endpoints, this route handler will render the page with the form
@@ -102,9 +99,16 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+// Add POST /login
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
+  res.cookie('username', req.body.username);// set a cookie
   res.redirect("/urls");
+});
+
+// Add POST /logout
+app.post("/logout", (req, res) => {
+  res.clearCookie('username'); // clears the username cookie
+  res.redirect('urls');
 });
 
 app.listen(port, () => {
