@@ -28,8 +28,6 @@ const generateRandomString = function(n) {
   return str;
 };
 
-
-
 // Set ejs as the view engine
 app.set('view engine', 'ejs');
 
@@ -54,7 +52,7 @@ app.get('/hello', (req, res) => {
 
 // Read GET /urls
 app.get('/urls', (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, username: req.cookies['username'] };
   res.render('urls_index', templateVars); // use res.render() to pass/send the data to template
 });
 
@@ -69,12 +67,13 @@ app.post('/urls', (req, res) => {
 
 // Add additional endpoints, this route handler will render the page with the form
 app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+  const templateVars = { username: req.cookies['username']};
+  res.render('urls_new', templateVars);
 });
 
 // Read GET /urls/:shortURL
 app.get('/urls/:shortURL', (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies['username'] };
   res.render('urls_show', templateVars);
 });
 
@@ -101,6 +100,11 @@ app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   urlDatabase[shortURL] = `http://${req.body.longURL}`;
   res.redirect(`/urls/${shortURL}`);
+});
+
+app.post("/login", (req, res) => {
+  res.cookie('username', req.body.username);
+  res.redirect("/urls");
 });
 
 app.listen(port, () => {
