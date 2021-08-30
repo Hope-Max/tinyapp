@@ -1,5 +1,12 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
+// The body-parser library will convert the request body from a Buffer into string that we can read.
+const bodyParser = require("body-parser");
+
 const app = express();
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
+
 const port = 8080;
 
 // Generates a random 6-digit string consisting of numbers and lowercase letters
@@ -21,9 +28,7 @@ const generateRandomString = function(n) {
   return str;
 };
 
-// The body-parser library will convert the request body from a Buffer into string that we can read.
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+
 
 // Set ejs as the view engine
 app.set('view engine', 'ejs');
