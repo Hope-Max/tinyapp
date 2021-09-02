@@ -67,13 +67,18 @@ const findUserByEmail = function(email) {
 // });
 
 // Add an additional endpoints with the response that contain HTML code
-app.get('/hello', (req, res) => {
-  res.send('<html><body>Hello <b>World</b></body></html>\n');
-});
+// app.get('/hello', (req, res) => {
+//   res.send('<html><body>Hello <b>World</b></body></html>\n');
+// });
 
 // Read GET /urls
 app.get('/urls', (req, res) => {
   const id = req.cookies.user_id;
+  // upload the urls page without login
+  if (!id) {
+    return res.redirect('/login');
+  }
+
   const templateVars = { urls: urlDatabase, user: users[id] };
   res.render('urls_index', templateVars); // use res.render() to pass/send the data to template
 });
@@ -90,6 +95,11 @@ app.post('/urls', (req, res) => {
 // Add additional endpoints, this route handler will render the page with the form
 app.get('/urls/new', (req, res) => {
   const id = req.cookies.user_id;
+  // upload the urls page without login
+  if (!id) {
+    return res.redirect('/login');
+  }
+
   const templateVars = { user: users[id] };
   res.render('urls_new', templateVars);
 });
@@ -97,25 +107,36 @@ app.get('/urls/new', (req, res) => {
 // Read GET /urls/:shortURL
 app.get('/urls/:shortURL', (req, res) => {
   const id = req.cookies.user_id;
+  // upload the urls page without login
+  if (!id) {
+    return res.redirect('/login');
+  }
+  
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[id] };
-
   res.render('urls_show', templateVars);
 });
 
 // Read GET /u/:shortURL
-app.get("/u/:shortURL", (req, res) => {
+app.get('/u/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
+  // shortURL does not exist in urlDatabase
   if (!urlDatabase[shortURL]) {
     res.statusCode = 404;
     return res.end('404 Page Not Found\n');
   }
-  const longURL = urlDatabase[shortURL];
 
+  const id = req.cookies.user_id;
+  // upload the urls page without login
+  if (!id) {
+    return res.redirect('/login');
+  }
+
+  const longURL = urlDatabase[shortURL];
   res.redirect(longURL);
 });
 
 // Delete POST /urls/:shortURL/delete
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
 
@@ -123,7 +144,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 // Edit POST /urls/:shortURL
-app.post("/urls/:shortURL", (req, res) => {
+app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   urlDatabase[shortURL] = `http://${req.body.longURL}`;
 
@@ -200,7 +221,7 @@ app.post('/register', (req, res) => {
   // set a 'user_id' cookie
   res.cookie('user_id', id);
 
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 app.listen(port, () => {
