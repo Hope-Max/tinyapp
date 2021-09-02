@@ -86,9 +86,10 @@ app.get('/urls', (req, res) => {
 // Add POST /urls
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString(6);
-  urlDatabase[shortURL] = `http://${req.body.longURL}`;
-  // console.log(req.body);  // Log the POST request body to the console
-  // res.send('Ok');         // Respond with 'Ok' (we will replace this)
+  const longURL = `http://${req.body.longURL}`;
+  const user_id = req.cookies.user_id;
+  urlDatabase[shortURL] = { longURL, user_id };
+
   res.redirect('/urls');
 });
 
@@ -111,8 +112,9 @@ app.get('/urls/:shortURL', (req, res) => {
   if (!id) {
     return res.redirect('/login');
   }
-  
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: users[id] };
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL].longURL
+  const templateVars = { shortURL, longURL, user: users[id] };
   res.render('urls_show', templateVars);
 });
 
@@ -125,13 +127,7 @@ app.get('/u/:shortURL', (req, res) => {
     return res.end('404 Page Not Found\n');
   }
 
-  const id = req.cookies.user_id;
-  // upload the urls page without login
-  if (!id) {
-    return res.redirect('/login');
-  }
-
-  const longURL = urlDatabase[shortURL];
+  const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -146,7 +142,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // Edit POST /urls/:shortURL
 app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
-  urlDatabase[shortURL] = `http://${req.body.longURL}`;
+  urlDatabase[shortURL].longURL = `http://${req.body.longURL}`;
 
   res.redirect(`/urls/${shortURL}`);
 });
@@ -221,7 +217,7 @@ app.post('/register', (req, res) => {
   // set a 'user_id' cookie
   res.cookie('user_id', id);
 
-  res.redirect('/login');
+  res.redirect('/urls');
 });
 
 app.listen(port, () => {
