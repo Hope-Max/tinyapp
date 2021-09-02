@@ -6,8 +6,26 @@ const bodyParser = require("body-parser");
 const app = express();
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
+// Set ejs as the view engine
+app.set('view engine', 'ejs');
 
 const port = 8080;
+
+// url database
+const urlDatabase = {};
+// users database
+const users = {
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+  "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+};
 
 // Generates a random 6-digit string consisting of numbers and lowercase letters
 // const generateRandomString1 = function() {
@@ -28,21 +46,15 @@ const generateRandomString = function(n) {
   return str;
 };
 
-// Set ejs as the view engine
-app.set('view engine', 'ejs');
-
-const urlDatabase = {};
-const users = {
-  "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
-  },
-  "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
+// Generates a function to find whether a userID exists in database(users object) by inputting email
+const findUserByEmail = function(email) {
+  for (let id of Object.keys(users)) {
+    const user = users[id];
+    if (user.email === email) {
+      return user;
+    }
   }
+  return null;
 };
 
 // app.get('/', (req, res) => {
@@ -118,33 +130,74 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-// Add POST /login
-app.post("/login", (req, res) => {
+// Read GET /login
+app.get('/login', (req, res) => {
   const id = req.cookies.user_id;
-  res.cookie('user_id', id);// set a cookie
-
-  res.redirect("/urls");
+  const templateVars = { user: users[id] };
+  res.render('login', templateVars);
 });
 
-// Add POST /logout
-app.post("/logout", (req, res) => {
-  res.clearCookie('user_id'); // clears the username cookie
+// Create POST /login
+app.post('/login', (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  // the e-mail or password are empty
+  if (!email || !password) {
+    return res.status(400).send('Email & password cannot be empty!');
+  }
+  // the e-mail is wrong
+  const user = findUserByEmail(email);
+  if (!user) {
+    return res.status(403).send('Email cannot be found!')
+  }
+  // the password is wrong
+  if (user.password !== password) {
+    return res.status(403).send('Incorrect password!')
+  }
+
+  // set 'user_id' cookie
+  const id = user.id;
+  res.cookie('user_id', id);
+
+  res.redirect('/urls');
+});
+
+// Create POST /logout
+app.post('/logout', (req, res) => {
+  // clears the user_id cookie
+  res.clearCookie('user_id'); 
 
   res.redirect('urls');
 });
 
 // Read GET /register
-app.get("/register", (req, res) => {
-  res.render('urls_registration');
+app.get('/register', (req, res) => {
+  const id = req.cookies.user_id;
+  const templateVars = { user: users[id] };
+  res.render('registration', templateVars);
 });
 
-// Add POST /register
-app.post("/register", (req, res) => {
-  const id = generateRandomString(8);
+// Create POST /register
+app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+
+  // the e-mail or password are empty
+  if (!email || !password) {
+    return res.status(400).send('Email & password cannot be empty!');
+  }
+  // the e-mail is already in use
+  const user = findUserByEmail(email);
+  if (user) {
+    return res.status(400).send('Email is already being used!');
+  }
+
+  // the e-mail and password is valid, add new client's info into users datbase
+  const id = generateRandomString(8);
   users[id] = { id, email, password };
 
+  // set a 'user_id' cookie
   res.cookie('user_id', id);
 
   res.redirect('/urls');

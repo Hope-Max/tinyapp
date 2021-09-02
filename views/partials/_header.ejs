@@ -12,16 +12,16 @@
     </div>
     <div>
       <% if (!user) { %>
-        <form class="form-inline" action="/login" method="POST">
-          <div class="form-group mb-2">
-            <input class="form-control" type="text" name="email" placeholder="Email" style="width: 300px; margin: 0.3em">
-            <button type="submit" class="btn btn-outline-dark">Login</button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+          <div class="navbar-nav">
+            <a class="nav-item nav-link" href="/register">Register here</a>
+            <a class="nav-item nav-link" href="/login">Login here</a>
           </div>
-        </form>
+        </div>
       <% } else { %>
         <form class="form-inline" action="/logout" method="POST">
           <div class="form-group mb-2">
-            <label for="username">Logged In As: <%=  user.email %></label>
+            <label for="email">Logged In As: <%=  user['email'] %></label>
             <button style="margin: 0.3em" type="submit" class="btn btn-outline-dark">Logout</button>
           </div>
         </form>
