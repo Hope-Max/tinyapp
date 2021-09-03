@@ -3,6 +3,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 // The body-parser library will convert the request body from a Buffer into string that we can read.
 const bodyParser = require("body-parser");
+const bcrypt = require('bcrypt');
 
 const app = express();
 app.use(bodyParser.urlencoded({extended: true}));
@@ -204,7 +205,8 @@ app.post('/login', (req, res) => {
     return res.status(403).send('Email cannot be found!')
   }
   // the password is wrong
-  if (user.password !== password) {
+  const storedHashedPassword = user.hashedPassword;
+  if (!bcrypt.compareSync(password, storedHashedPassword)) {
     return res.status(403).send('Incorrect password!')
   }
 
@@ -247,8 +249,9 @@ app.post('/register', (req, res) => {
 
   // the e-mail and password is valid, add new client's info into users datbase
   const id = generateRandomString(8);
-  users[id] = { id, email, password };
-
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  users[id] = { id, email, hashedPassword };
+  console.log(users);
   // set a 'user_id' cookie
   res.cookie('user_id', id);
 
