@@ -1,4 +1,5 @@
 const express = require('express');
+// Read the values from the cookie
 const cookieParser = require('cookie-parser');
 // The body-parser library will convert the request body from a Buffer into string that we can read.
 const bodyParser = require("body-parser");
@@ -11,9 +12,15 @@ app.set('view engine', 'ejs');
 
 const port = 8080;
 
+/* urlDatabase example
+const urlDatabase = {
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+};
+*/
 // url database
 const urlDatabase = {};
-// users database
+/* users examples
 const users = {
   "userRandomID": {
     id: "userRandomID", 
@@ -26,6 +33,9 @@ const users = {
     password: "dishwasher-funk"
   }
 };
+*/
+// users database
+const users = {};
 
 // Generates a random 6-digit string consisting of numbers and lowercase letters
 // const generateRandomString1 = function() {
@@ -57,6 +67,17 @@ const findUserByEmail = function(email) {
   return null;
 };
 
+// Generates a function to return the URLs where the user_id is equal to the id of the currently logged-in user
+const urlsForUser = function(personalUserID) {
+  const personalUrlDatabase = {};
+  for (let shortURL of Object.keys(urlDatabase)) {
+    if (urlDatabase[shortURL].user_id === personalUserID) {
+      personalUrlDatabase[shortURL] = urlDatabase[shortURL].longURL;
+    }
+  }
+  return personalUrlDatabase;
+}
+
 // app.get('/', (req, res) => {
 //   res.send('Hello!');// res.write() && res.send()
 // });
@@ -74,12 +95,14 @@ const findUserByEmail = function(email) {
 // Read GET /urls
 app.get('/urls', (req, res) => {
   const id = req.cookies.user_id;
+
   // upload the urls page without login
   if (!id) {
     return res.redirect('/login');
   }
-
-  const templateVars = { urls: urlDatabase, user: users[id] };
+  // filter the entire list in the urlDatabase by comparing the userID with the logged-in user's ID 
+  const personalUrlDatabase = urlsForUser(id);
+  const templateVars = { urls: personalUrlDatabase, user: users[id] };
   res.render('urls_index', templateVars); // use res.render() to pass/send the data to template
 });
 
@@ -108,12 +131,14 @@ app.get('/urls/new', (req, res) => {
 // Read GET /urls/:shortURL
 app.get('/urls/:shortURL', (req, res) => {
   const id = req.cookies.user_id;
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL].longURL
+
   // upload the urls page without login
   if (!id) {
     return res.redirect('/login');
   }
-  const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL].longURL
+  
   const templateVars = { shortURL, longURL, user: users[id] };
   res.render('urls_show', templateVars);
 });
@@ -134,16 +159,26 @@ app.get('/u/:shortURL', (req, res) => {
 // Delete POST /urls/:shortURL/delete
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
+  const id = req.cookies.user_id;
+
+  // only can delete the shortURL by using the correct cookie value 
+  if (urlDatabase[shortURL].user_id === id) {
+    delete urlDatabase[shortURL];
+  }
 
   res.redirect('/urls');
 });
 
 // Edit POST /urls/:shortURL
 app.post('/urls/:shortURL', (req, res) => {
+  const id = req.cookies.user_id;
   const shortURL = req.params.shortURL;
-  urlDatabase[shortURL].longURL = `http://${req.body.longURL}`;
-
+  
+  // only can edit the shortURL by using the correct cookie value
+  if (urlDatabase[shortURL].user_id === id) {
+    urlDatabase[shortURL].longURL = `http://${req.body.longURL}`;
+  }
+  
   res.redirect(`/urls/${shortURL}`);
 });
 
