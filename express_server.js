@@ -1,13 +1,20 @@
 const express = require('express');
 // Read the values from the cookie
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
 // The body-parser library will convert the request body from a Buffer into string that we can read.
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
+const cookieSession = require('cookie-session');
 
 const app = express();
+
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+// app.use(cookieParser());
+app.use(cookieSession({
+  name: "session",
+  secret: "secret",
+}));
+
 // Set ejs as the view engine
 app.set('view engine', 'ejs');
 
@@ -95,8 +102,8 @@ const urlsForUser = function(personalUserID) {
 
 // Read GET /urls
 app.get('/urls', (req, res) => {
-  const id = req.cookies.user_id;
-
+  // const id = req.cookies.user_id;
+  const id = req.session.user_id;
   // upload the urls page without login
   if (!id) {
     return res.redirect('/login');
@@ -111,7 +118,8 @@ app.get('/urls', (req, res) => {
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString(6);
   const longURL = `http://${req.body.longURL}`;
-  const user_id = req.cookies.user_id;
+  // const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   urlDatabase[shortURL] = { longURL, user_id };
 
   res.redirect('/urls');
@@ -119,7 +127,8 @@ app.post('/urls', (req, res) => {
 
 // Add additional endpoints, this route handler will render the page with the form
 app.get('/urls/new', (req, res) => {
-  const id = req.cookies.user_id;
+  // const id = req.cookies.user_id;
+  const id = req.session.user_id;
   // upload the urls page without login
   if (!id) {
     return res.redirect('/login');
@@ -131,7 +140,8 @@ app.get('/urls/new', (req, res) => {
 
 // Read GET /urls/:shortURL
 app.get('/urls/:shortURL', (req, res) => {
-  const id = req.cookies.user_id;
+  // const id = req.cookies.user_id;
+  const id = req.session.user_id;
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL].longURL
 
@@ -160,7 +170,8 @@ app.get('/u/:shortURL', (req, res) => {
 // Delete POST /urls/:shortURL/delete
 app.post('/urls/:shortURL/delete', (req, res) => {
   const shortURL = req.params.shortURL;
-  const id = req.cookies.user_id;
+  // const id = req.cookies.user_id;
+  const id = req.session.user_id;
 
   // only can delete the shortURL by using the correct cookie value 
   if (urlDatabase[shortURL].user_id === id) {
@@ -172,7 +183,8 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 // Edit POST /urls/:shortURL
 app.post('/urls/:shortURL', (req, res) => {
-  const id = req.cookies.user_id;
+  // const id = req.cookies.user_id;
+  const id = req.session.user_id;
   const shortURL = req.params.shortURL;
   
   // only can edit the shortURL by using the correct cookie value
@@ -185,15 +197,15 @@ app.post('/urls/:shortURL', (req, res) => {
 
 // Read GET /login
 app.get('/login', (req, res) => {
-  const id = req.cookies.user_id;
+  // const id = req.cookies.user_id;
+  const id = req.session.user_id;
   const templateVars = { user: users[id] };
   res.render('login', templateVars);
 });
 
 // Create POST /login
 app.post('/login', (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
+  const { email, password } = req.body;
 
   // the e-mail or password are empty
   if (!email || !password) {
@@ -212,7 +224,8 @@ app.post('/login', (req, res) => {
 
   // set 'user_id' cookie
   const id = user.id;
-  res.cookie('user_id', id);
+  // res.cookie('user_id', id);
+  req.session.user_id = id;
 
   res.redirect('/urls');
 });
@@ -220,22 +233,23 @@ app.post('/login', (req, res) => {
 // Create POST /logout
 app.post('/logout', (req, res) => {
   // clears the user_id cookie
-  res.clearCookie('user_id'); 
+  // res.clearCookie('user_id'); 
+  req.session = null;
 
   res.redirect('urls');
 });
 
 // Read GET /register
 app.get('/register', (req, res) => {
-  const id = req.cookies.user_id;
+  // const id = req.cookies.user_id;
+  const id = req.session.user_id;
   const templateVars = { user: users[id] };
   res.render('registration', templateVars);
 });
 
 // Create POST /register
 app.post('/register', (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
+  const {email, password} = req.body;
 
   // the e-mail or password are empty
   if (!email || !password) {
@@ -251,9 +265,12 @@ app.post('/register', (req, res) => {
   const id = generateRandomString(8);
   const hashedPassword = bcrypt.hashSync(password, 10);
   users[id] = { id, email, hashedPassword };
-  console.log(users);
-  // set a 'user_id' cookie
-  res.cookie('user_id', id);
+
+  // set a 'user_id' cookie by using cookie parser
+  // res.cookie('user_id', id);
+
+  // set a 'user_id' cookie by using cookie session
+  req.session.user_id = id;
 
   res.redirect('/urls');
 });
