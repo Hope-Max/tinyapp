@@ -10,7 +10,7 @@ const { findUserByEmail, urlsForUser, generateRandomString } = require('./helper
 const app = express();
 const port = 8080;
 
-app.use( express.static( "public" ) );
+app.use(express.static("public"));
 app.use(bodyParser.urlencoded({extended: true}));
 // app.use(cookieParser());
 app.use(cookieSession({
