@@ -8,18 +8,17 @@ const cookieSession = require('cookie-session');
 const { findUserByEmail, urlsForUser, generateRandomString } = require('./helpers');
 
 const app = express();
+const port = 8080;
 
+app.use( express.static( "public" ) );
 app.use(bodyParser.urlencoded({extended: true}));
 // app.use(cookieParser());
 app.use(cookieSession({
   name: "session",
   secret: "secret",
 }));
-
 // Set ejs as the view engine
 app.set('view engine', 'ejs');
-
-const port = 8080;
 
 /* urlDatabase example
 const urlDatabase = {
@@ -46,19 +45,12 @@ const users = {
 // users database
 const usersDatabase = {};
 
-// app.get('/', (req, res) => {
-//   res.send('Hello!');// res.write() && res.send()
-// });
-
-// Add an additional endpoints
-// app.get('/urls.json', (req, res) => {
-//   res.json(urlDatabase);// JSON.stringify() && res.send()
-// });
-
-// Add an additional endpoints with the response that contain HTML code
-// app.get('/hello', (req, res) => {
-//   res.send('<html><body>Hello <b>World</b></body></html>\n');
-// });
+// Read GET /home
+app.get('/home', (req, res) => {
+  const id = req.session.user_id;
+  const templateVars = { user: usersDatabase[id] };
+  res.render('home', templateVars);
+});
 
 // Read GET /urls
 app.get('/urls', (req, res) => {
@@ -82,10 +74,10 @@ app.post('/urls', (req, res) => {
   const user_id = req.session.user_id;
   urlDatabase[shortURL] = { longURL, user_id };
 
-  res.redirect('/urls');
+  res.redirect(`/urls/${shortURL}`);
 });
 
-// Add additional endpoints, this route handler will render the page with the form
+// Read GET /urls/new
 app.get('/urls/new', (req, res) => {
   // const id = req.cookies.user_id;
   const id = req.session.user_id;
@@ -196,7 +188,7 @@ app.post('/logout', (req, res) => {
   // res.clearCookie('user_id');
   req.session = null;
 
-  res.redirect('urls');
+  res.redirect('/home');
 });
 
 // Read GET /register
