@@ -4,7 +4,7 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 ## Final Product
 
-!["screenshot description"](#)
+!["Screenshot of home page"](https://github.com/Hope-Max/tinyapp/blob/master/docs/home-page.png?raw=true)
 !["screenshot description"](#)
 
 ## Dependencies
