@@ -90,6 +90,30 @@ app.get('/urls/new', (req, res) => {
   res.render('urls_new', templateVars);
 });
 
+// Stored the totalVisit, totalUniqueVisit and visitID
+/* example
+const visits = {
+  HemkAd: { totalVisit: 1, totalUniqueVisit: 1, visitID: [ 'GDvemnFA' ] },
+  UngGVs: { totalVisit: 1, totalUniqueVisit: 1, visitID: [ 'GDvemnFA' ] }
+};
+*/
+const visits = {};
+
+// Stored the visitID and time
+/*
+const loginRecords = {
+  HemkAd: [
+    { visitID: 'GDvemnFA', time: 'Sun, 05 Sep 2021 04:00:23 GMT' },
+    { visitID: 'GDvemnFA', time: 'Sun, 05 Sep 2021 04:00:28 GMT' },
+    { visitID: '63FiyOCf', time: 'Sun, 05 Sep 2021 04:01:05 GMT' }
+  ],
+  UngGVs: [ 
+    { visitID: 'GDvemnFA', time: 'Sun, 05 Sep 2021 04:00:40 GMT' }
+  ]
+};
+*/
+const loginRecords = {};
+
 // Read GET /urls/:shortURL
 app.get('/urls/:shortURL', (req, res) => {
   // const id = req.cookies.user_id;
@@ -102,7 +126,13 @@ app.get('/urls/:shortURL', (req, res) => {
     return res.redirect('/login');
   }
   
-  const templateVars = { shortURL, longURL, user: usersDatabase[id] };
+  // Initialize the visits and loginRecords database when first accessing to /urls/:shortURL page
+  if (!Object.keys(visits).includes(shortURL)) {
+    visits[shortURL] = { totalVisit: 0, totalUniqueVisit: 0, visitID: []};
+    loginRecords[shortURL] = [];
+  }
+
+  const templateVars = { shortURL, longURL, user: usersDatabase[id], visits, loginRecords };
   res.render('urls_show', templateVars);
 });
 
@@ -117,6 +147,26 @@ app.get('/u/:shortURL', (req, res) => {
 
   const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
+
+  // update the count of visit when accessing to /u/:shortURL page
+  visits[shortURL].totalVisit++;
+
+  // Use cookie as the visitID
+  let visitID = req.session.user_id;
+  if (!visitID) {
+    visitID = generateRandomString(8);
+  }
+  // update the count of unique visit when one a new visitID first accessing to /u/:shortURL page
+  if (!visits[shortURL].visitID.includes(visitID)) {
+    visits[shortURL].visitID.push(visitID);
+    visits[shortURL].totalUniqueVisit++;
+  }
+
+  // Add login records into loginRecords database
+  const logTime = new Date();
+  const time = logTime.toUTCString();
+  loginRecords[shortURL].push({ visitID, time });
+
 });
 
 // Delete POST /urls/:shortURL/delete
@@ -145,6 +195,7 @@ app.post('/urls/:shortURL', (req, res) => {
   }
   
   res.redirect(`/urls/${shortURL}`);
+  
 });
 
 // Read GET /login
@@ -225,6 +276,7 @@ app.post('/register', (req, res) => {
   req.session.user_id = id;
 
   res.redirect('/urls');
+
 });
 
 app.listen(port, () => {

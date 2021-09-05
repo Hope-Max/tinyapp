@@ -12,9 +12,9 @@
     <div class="card-header"></div>
     <div class="card-body">
       <h5 class="card-title">TinyURL for: <%= longURL %></h5>
-      <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
+      <p class="card-text">Short URL: <a href="/u/<%= shortURL %>" target="_blank"><%= shortURL %></a></p>
       <hr />
-      <p align= "left" style="font-size: 1.4em;">Edit</p>
+      <h5 align= "left">Edit</h5>
       <form class="form-inline" action="/urls/<%= shortURL %>" method="POST">
         <div class="form-group mb-2" >
           <label for="longURL">New URL:</label>
@@ -22,6 +22,28 @@
           <button type="submit" class="btn btn-primary">Update</button>
         </div>
       </form>
+      <hr />
+      <h5 align= "left" style="margin-bottom: 1em;">Visitors</h5>
+      <p align="left">Total Visits: <%= visits[shortURL].totalVisit %></p>
+      <p align="left">Total Unique Visits: <%= visits[shortURL].totalUniqueVisit %></p>
+      <hr />
+      <h5 align= "left" style="margin-bottom: 1em;">Logins</h5>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Visit Address</th>
+            <th scope="col">Visit Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for(let login of loginRecords[shortURL]) { %>
+            <tr>
+              <td><%= login.visitID %></td>
+              <td><%= login.time %></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
     </div>
     <div class="card-footer text-muted"></div>
   </div>
