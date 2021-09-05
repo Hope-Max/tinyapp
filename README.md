@@ -8,7 +8,7 @@ TinyApp is a full stack web application built with Node and Express that allows 
 !["Screenshot of register page"](https://github.com/Hope-Max/tinyapp/blob/master/docs/register-page.png?raw=true)
 !["screenshot of urls page"](https://github.com/Hope-Max/tinyapp/blob/master/docs/urls-page.png?raw=true)
 !["screenshot of urls/new page"](https://github.com/Hope-Max/tinyapp/blob/master/docs/urls:new-page.png?raw=true)
-!["screenshot of urls/shortURL page"](https://github.com/Hope-Max/tinyapp/blob/master/docs/urls:shortURL-page.png?raw=true)
+!["screenshot of urls/shortURL page(updated)"](https://github.com/Hope-Max/tinyapp/blob/master/docs/urls:shortURL-page.png?raw=true)
 
 ## Dependencies
 
