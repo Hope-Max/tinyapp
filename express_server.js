@@ -45,6 +45,18 @@ const users = {
 // users database
 const usersDatabase = {};
 
+// Read GET /
+app.get('/', (req, res) => {
+  const id = req.session.user_id;
+  // if user is logged in: redirect to /urls
+  if (!id) {
+    return res.redirect('/login');
+  }
+  // if user is not logged in: redirect to /login
+  res.redirect('/urls');
+});
+
+
 // Read GET /home
 app.get('/home', (req, res) => {
   const id = req.session.user_id;
@@ -54,13 +66,13 @@ app.get('/home', (req, res) => {
 
 // Read GET /urls
 app.get('/urls', (req, res) => {
-  // const id = req.cookies.user_id;
   const id = req.session.user_id;
-  // upload the urls page without login
+  // if user is not logged in: returns HTML with a relevant error message
   if (!id) {
-    return res.redirect('/login');
+    const templateVars = { user: usersDatabase[id] };
+    return res.render('loginError', templateVars);
   }
-  // filter the entire list in the urlDatabase by comparing the userID with the logged-in user's ID
+  // if user is logged in: filter the entire list in the urlDatabase by comparing the userID with the logged-in user's ID
   const personalUrlDatabase = urlsForUser(id, urlDatabase);
   const templateVars = { urls: personalUrlDatabase, user: usersDatabase[id] };
   res.render('urls_index', templateVars); // use res.render() to pass/send the data to template
@@ -70,8 +82,14 @@ app.get('/urls', (req, res) => {
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString(6);
   const longURL = `http://${req.body.longURL}`;
-  // const user_id = req.cookies.user_id;
   const user_id = req.session.user_id;
+
+  // if user is not logged in: returns HTML with a relevant error message
+  if (!user_id) {
+    const templateVars = { user: usersDatabase[user_id] };
+    return res.render('loginError', templateVars);
+  }
+
   urlDatabase[shortURL] = { longURL, user_id };
 
   res.redirect(`/urls/${shortURL}`);
@@ -107,7 +125,7 @@ const loginRecords = {
     { visitID: 'GDvemnFA', time: 'Sun, 05 Sep 2021 04:00:28 GMT' },
     { visitID: '63FiyOCf', time: 'Sun, 05 Sep 2021 04:01:05 GMT' }
   ],
-  UngGVs: [ 
+  UngGVs: [
     { visitID: 'GDvemnFA', time: 'Sun, 05 Sep 2021 04:00:40 GMT' }
   ]
 };
@@ -116,18 +134,28 @@ const loginRecords = {};
 
 // Read GET /urls/:shortURL
 app.get('/urls/:shortURL', (req, res) => {
-  // const id = req.cookies.user_id;
-  const id = req.session.user_id;
+  // if a URL for the given ID does not exist: returns HTML with a relevant error message
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL].longURL;
-
-  // upload the urls page without login
-  if (!id) {
-    return res.redirect('/login');
+  if (!urlDatabase[shortURL]) {
+    return res.status(404).send(`The entered shortURL (${shortURL}) does not exist!`);
   }
-  
+
+  const longURL = urlDatabase[shortURL].longURL;
+  const id = req.session.user_id;
+  // if user is not logged in: returns HTML with a relevant error message
+  if (!id) {
+    const templateVars = { user: usersDatabase[id] };
+    return res.render('loginError', templateVars);
+  }
+
+  // if user is logged it but does not own the URL with the given ID: returns HTML with a relevant error message
+  const personalUrlDatabase = urlsForUser(id, urlDatabase);
+  if (!personalUrlDatabase[shortURL]) {
+    return res.status(400).send(`Sorry, you do not own this shortURL (${shortURL})`);
+  }
+
   // Initialize the visits and loginRecords database when first accessing to /urls/:shortURL page
-  if (!Object.keys(visits).includes(shortURL)) {
+  if (!visits[shortURL]) {
     visits[shortURL] = { totalVisit: 0, totalUniqueVisit: 0, visitID: []};
     loginRecords[shortURL] = [];
   }
@@ -141,8 +169,7 @@ app.get('/u/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   // shortURL does not exist in urlDatabase
   if (!urlDatabase[shortURL]) {
-    res.statusCode = 404;
-    return res.end('404 Page Not Found\n');
+    return res.status(404).send(`The entered shortURL (${shortURL}) does not exist!`);
   }
 
   const longURL = urlDatabase[shortURL].longURL;
@@ -175,6 +202,12 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   // const id = req.cookies.user_id;
   const id = req.session.user_id;
 
+  // if user is not logged in: returns HTML with a relevant error message
+  if (!id) {
+    const templateVars = { user: usersDatabase[id] };
+    return res.render('loginError', templateVars);
+  }
+
   // only can delete the shortURL by using the correct cookie value
   if (urlDatabase[shortURL].user_id === id) {
     delete urlDatabase[shortURL];
@@ -188,6 +221,12 @@ app.post('/urls/:shortURL', (req, res) => {
   // const id = req.cookies.user_id;
   const id = req.session.user_id;
   const shortURL = req.params.shortURL;
+
+  // if user is not logged in: returns HTML with a relevant error message
+  if (!id) {
+    const templateVars = { user: usersDatabase[id] };
+    return res.render('loginError', templateVars);
+  }
   
   // only can edit the shortURL by using the correct cookie value
   if (urlDatabase[shortURL].user_id === id) {
